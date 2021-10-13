@@ -2,6 +2,7 @@ import org.apache.spark.graphx
 import org.apache.spark.graphx.{Edge, Graph}
 
 import scala.collection.mutable.Map
+import scala.collection.mutable.Set
 import scala.util.Random
 
 abstract class Estimator[VD,ED](wholeGraph: Graph[VD,ED]){
@@ -21,7 +22,19 @@ abstract class Estimator[VD,ED](wholeGraph: Graph[VD,ED]){
   }
   def ConditionalSampleEdge(subEdges:List[Edge[ED]]): (Edge[ED],Double)={
     //TODO uniform sample from e 's neighborhood
-    (subEdges.head, 1.0/subEdges.size)
+    var vertexSet : Set[graphx.VertexId]= Set()
+    subEdges.foreach(edge=>{
+      vertexSet.add(edge.srcId)
+      vertexSet.add(edge.dstId)
+    })
+    val neighborEdges = edges.drop(streamIndex).filter(edge=>{
+      vertexSet.contains(edge.srcId) || vertexSet.contains(edge.dstId)
+    })
+    val neighborCount = neighborEdges.size
+    val neighborIndex = Random.nextInt(neighborCount)
+    val neighborE = neighborEdges(neighborIndex)
+    streamIndex = edges.indexOf(neighborE)
+    (neighborE, 1.0/neighborCount)
   }
   def ConditionalClose(subEdges:List[Edge[ED]], expectEdges:List[Edge[ED]]) : Boolean={
     //TODO uniform sample from e 's neighborhood
