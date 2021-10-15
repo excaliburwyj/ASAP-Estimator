@@ -89,17 +89,21 @@ object GraphXExample {
 
 
 
-//    //构造vertexRDD和edgeRDD
-//
-//    val vertexRDD: RDD[(Long, (String, Int))] = sc.parallelize(vertexArray)
-//
-//    val edgeRDD: RDD[Edge[Int]] = sc.parallelize(edgeArray)
-//
-//
-//
-//    //构造图Graph[VD,ED]
-//
-//    val graph: Graph[(String, Int), Int] = Graph(vertexRDD, edgeRDD)
+    //构造vertexRDD和edgeRDD
+
+    val vertexRDD: RDD[(Long, (String, Int))] = sc.parallelize(vertexArray)
+
+    val edgeRDD: RDD[Edge[Int]] = sc.parallelize(edgeArray)
+
+
+
+    //构造图Graph[VD,ED]
+
+    val graph: Graph[(String, Int), Int] = Graph(vertexRDD, edgeRDD)
+
+    val test : TriangleEstimator[(String, Int), Int] = new TriangleEstimator[(String, Int), Int](graph)
+    val count = test.algorithm()
+    println(count)
 //
 //
 //
@@ -387,105 +391,105 @@ object GraphXExample {
 //      (it) => {println(s"${it._1} count: ${it._2}")}
 //    )
 
-    //***********************************************************************************
-
-    //***************************  读取FaceBook图    ****************************************
-
-    //**********************************************************************************
-
-    println("**********************************************************")
-
-    println("读取FaceBook图")
-
-    val facebook  = GraphLoader.edgeListFile(sc,
-      "E:\\graph\\datagraph\\facebook_combined.txt").partitionBy(PartitionStrategy.RandomVertexCut)
-
-//    val facebook = GraphLoader.edgeListFile(sc,
-//      "E:\\graph\\spark-3.1.2-bin-hadoop3.2\\data\\graphx\\followers.txt").partitionBy(PartitionStrategy.RandomVertexCut)
-//    println("FaceBook三角形")
-
-    val fbTri = facebook.triangleCount().vertices
-
-    var totalTri = fbTri.reduce((a,b)=>{ (-1,a._2+b._2)})
-//    fbTri.foreach(
-//      (it) => {
-//        totalTri += it._2
-//        println(it._2)
-//      }
-//    )
-    println(s"FaceBook Triangle ${totalTri._2}")
-
-    println("**********************************************************")
-
-    println("统计度数")
-//    // Join the triangle counts with the usernames
-//    val users = sc.textFile("E:\\graph\\spark-3.1.2-bin-hadoop3.2\\data\\graphx\\users.txt").map { line =>
-//      val fields = line.split(",")
-//      (fields(0).toLong, fields(1))
-//    }
-//    val triCountByUsername = users.join(fbTri).map { case (id, (username, tc)) =>
-//      (username, tc)
-//    }
-//    // Print the result
-//    println(triCountByUsername.collect().mkString("\n"))
-
-//    println("出度")
+//    //***********************************************************************************
 //
-//    facebook.outDegrees.foreach((it)=>{println(s"id ${it._1} out degree ${it._2}")})
+//    //***************************  读取FaceBook图    ****************************************
 //
-//    println("入度")
+//    //**********************************************************************************
 //
-//    facebook.inDegrees.foreach((it)=>{println(s"id ${it._1} in degree ${it._2}")})
+//    println("**********************************************************")
 //
-//    println("总体度数")
+//    println("读取FaceBook图")
 //
-//    facebook.degrees.foreach((it)=>{println(s"id ${it._1} total degree ${it._2}")})
+//    val facebook  = GraphLoader.edgeListFile(sc,
+//      "E:\\graph\\datagraph\\facebook_combined.txt").partitionBy(PartitionStrategy.RandomVertexCut)
 //
-//    println("子图")
-
-//    val subFacebook = facebook.subgraph(vpred = (id, vd)=>{
-//      println(s"vertex id ${id} vd ${vd}")
-//      true})
+////    val facebook = GraphLoader.edgeListFile(sc,
+////      "E:\\graph\\spark-3.1.2-bin-hadoop3.2\\data\\graphx\\followers.txt").partitionBy(PartitionStrategy.RandomVertexCut)
+////    println("FaceBook三角形")
 //
-//    subFacebook.vertices.collect.foreach(v => println(s"sub id ${v._1} vd ${v._2}"))
-    println(s"vertex count : ${facebook.vertices.count()}")
-    val count = facebook.degrees.count().toInt
-    val arrDegrees = facebook.degrees.take(count)
-    import org.jfree.data.xy.XYSeriesCollection
-    val dataset = new XYSeriesCollection
-    import org.jfree.data.xy.XYSeries
-    val xySeries = new XYSeries("degree")
-    arrDegrees.groupBy(it=>it._2).map(it=>(it._1,it._2.size)).toList.sortBy(it=>it._1).foreach(it=>{
-      xySeries.add(it._2,it._1)
-      println(s"degree is ${it._1} count ${it._2}")})
-    dataset.addSeries(xySeries)
-    val lineChart = ChartFactory.createXYLineChart("Degree count",
-      "degree", "Count of Vertex", dataset,
-      PlotOrientation.VERTICAL, true, true, false)
-
-    val plot = lineChart.getXYPlot
-    plot.getDomainAxis().setRange(0,50)
-    import org.jfree.chart.axis.NumberTickUnit
-//    plot.getRangeAxis().setStandardTickUnits()
-    val peer = new ChartFrame("degree", lineChart, true)
-    peer.pack()
-    peer.setVisible(true);
-    facebook.edges.collect().foreach(it=>{})
-
-//    peer.show()
-
-//    arrDegrees.sortBy(_._2).foreach(it=>println(s"degrees id ${it._1} degree ${it._2}"))
-//    val newGraph = facebook.mapVertices((id, vd)=> {
-//      val de = 0
-//      val degreeNode = arrDegrees.find(it => { it._1 == id})
-//      degreeNode match {
-//        case None => de
-//        case Some(value) => value._2
-//      }
-//    })
+//    val fbTri = facebook.triangleCount().vertices
 //
+//    var totalTri = fbTri.reduce((a,b)=>{ (-1,a._2+b._2)})
+////    fbTri.foreach(
+////      (it) => {
+////        totalTri += it._2
+////        println(it._2)
+////      }
+////    )
+//    println(s"FaceBook Triangle ${totalTri._2}")
 //
-//    newGraph.vertices.collect.foreach(v => println(s"newGraph id ${v._1} vd ${v._2}"))
+//    println("**********************************************************")
+//
+//    println("统计度数")
+////    // Join the triangle counts with the usernames
+////    val users = sc.textFile("E:\\graph\\spark-3.1.2-bin-hadoop3.2\\data\\graphx\\users.txt").map { line =>
+////      val fields = line.split(",")
+////      (fields(0).toLong, fields(1))
+////    }
+////    val triCountByUsername = users.join(fbTri).map { case (id, (username, tc)) =>
+////      (username, tc)
+////    }
+////    // Print the result
+////    println(triCountByUsername.collect().mkString("\n"))
+//
+////    println("出度")
+////
+////    facebook.outDegrees.foreach((it)=>{println(s"id ${it._1} out degree ${it._2}")})
+////
+////    println("入度")
+////
+////    facebook.inDegrees.foreach((it)=>{println(s"id ${it._1} in degree ${it._2}")})
+////
+////    println("总体度数")
+////
+////    facebook.degrees.foreach((it)=>{println(s"id ${it._1} total degree ${it._2}")})
+////
+////    println("子图")
+//
+////    val subFacebook = facebook.subgraph(vpred = (id, vd)=>{
+////      println(s"vertex id ${id} vd ${vd}")
+////      true})
+////
+////    subFacebook.vertices.collect.foreach(v => println(s"sub id ${v._1} vd ${v._2}"))
+//    println(s"vertex count : ${facebook.vertices.count()}")
+//    val count = facebook.degrees.count().toInt
+//    val arrDegrees = facebook.degrees.take(count)
+//    import org.jfree.data.xy.XYSeriesCollection
+//    val dataset = new XYSeriesCollection
+//    import org.jfree.data.xy.XYSeries
+//    val xySeries = new XYSeries("degree")
+//    arrDegrees.groupBy(it=>it._2).map(it=>(it._1,it._2.size)).toList.sortBy(it=>it._1).foreach(it=>{
+//      xySeries.add(it._2,it._1)
+//      println(s"degree is ${it._1} count ${it._2}")})
+//    dataset.addSeries(xySeries)
+//    val lineChart = ChartFactory.createXYLineChart("Degree count",
+//      "degree", "Count of Vertex", dataset,
+//      PlotOrientation.VERTICAL, true, true, false)
+//
+//    val plot = lineChart.getXYPlot
+//    plot.getDomainAxis().setRange(0,50)
+//    import org.jfree.chart.axis.NumberTickUnit
+////    plot.getRangeAxis().setStandardTickUnits()
+//    val peer = new ChartFrame("degree", lineChart, true)
+//    peer.pack()
+//    peer.setVisible(true);
+//    facebook.edges.collect().foreach(it=>{})
+//
+////    peer.show()
+//
+////    arrDegrees.sortBy(_._2).foreach(it=>println(s"degrees id ${it._1} degree ${it._2}"))
+////    val newGraph = facebook.mapVertices((id, vd)=> {
+////      val de = 0
+////      val degreeNode = arrDegrees.find(it => { it._1 == id})
+////      degreeNode match {
+////        case None => de
+////        case Some(value) => value._2
+////      }
+////    })
+////
+////
+////    newGraph.vertices.collect.foreach(v => println(s"newGraph id ${v._1} vd ${v._2}"))
 
     sc.stop()
 
