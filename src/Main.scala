@@ -13,6 +13,8 @@ import org.jfree.chart.plot.PlotOrientation
 import org.jfree.data.category.DefaultCategoryDataset
 import org.jfree.data.xy.DefaultXYDataset
 
+import java.util.concurrent.CountDownLatch
+
 case class User(name: String, age: Int, inDeg: Int, outDeg: Int) extends Serializable
 
 object GraphXExample {
@@ -101,9 +103,38 @@ object GraphXExample {
 
     val graph: Graph[(String, Int), Int] = Graph(vertexRDD, edgeRDD)
 
-    val test : TriangleEstimator[(String, Int), Int] = new TriangleEstimator[(String, Int), Int](graph)
-    val count = test.algorithm()
-    println(count)
+    val estimatorCount = 50
+    var sumCount = new Array[Int](_length=estimatorCount)
+    val countDownLatch = new CountDownLatch(estimatorCount)
+    countDownLatch.countDown()
+    for(i <- 0 until estimatorCount) {
+      val thread = new Thread(() => {
+        val test: TriangleEstimator[(String, Int), Int] = new TriangleEstimator[(String, Int), Int](graph)
+        val count = test.algorithm()
+//        print(s"${i} count ${count};  ")
+        sumCount(i) = count
+        countDownLatch.countDown()
+      })
+      thread.start()
+    }
+    countDownLatch.await()
+    println()
+    println(s"estimator ${estimatorCount} ${sumCount.sum/estimatorCount}")
+    val triCounts = graph.triangleCount().vertices
+
+    var totalTri = triCounts.reduce((a,b)=>{ (-1,a._2+b._2)})
+    println(s"True Triangle ${totalTri._2 / 3}")
+
+    //    val fbTri = facebook.triangleCount().vertices
+    //
+    //    var totalTri = fbTri.reduce((a,b)=>{ (-1,a._2+b._2)})
+    ////    fbTri.foreach(
+    ////      (it) => {
+    ////        totalTri += it._2
+    ////        println(it._2)
+    ////      }
+    ////    )
+    //    println(s"FaceBook Triangle ${totalTri._2}")
 //
 //
 //
